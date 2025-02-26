@@ -4,7 +4,28 @@ import { db } from "./db";
 const router = Router();
 
 router.get("/v1/flight-plans", async (req, res) => {
-  const result = await db.select("*").from("flight_plans");
+  const { page = 1, limit = 10, cid, callsign, status } = req.query;
+  const offset = (Number(page) - 1) * Number(limit);
+
+  const query = db
+    .select("*")
+    .from("flight_plans")
+    .orderBy("created_at", "desc");
+
+  if (cid) {
+    query.where("cid", cid);
+  }
+
+  if (callsign) {
+    query.where("callsign", callsign);
+  }
+
+  if (status) {
+    query.where("status", status);
+  }
+
+  const result = await query.limit(Number(limit)).offset(offset);
+
   res.json(result);
 });
 
